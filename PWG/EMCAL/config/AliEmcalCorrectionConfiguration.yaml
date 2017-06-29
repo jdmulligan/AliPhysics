@@ -5,6 +5,8 @@ inputObjects:                                       # Define all of the input ob
     cells:                                          # Configure cells
         defaultCells:                               # Name of a cell input
             branchName: "usedefault"                # Sets the branch name. "usedefault" is supported
+        phosCells:
+            branchName: "phosCells"
     clusterContainers:                              # Configure clusters
         # The user can select the name of each container
         # The names don't need to correspond to any particular scheme
@@ -20,7 +22,10 @@ inputObjects:                                       # Define all of the input ob
             # The branch name is inherited from defaultClusterContainer!
             minE: 0.0                               # Cluster min E.
             minPt: 0.0                              # Cluster min pt.
-            clusNonLinCorrEnergyCut: 0.15           # Cluster non-linearity min E. Formerly "minPt" in the non-linearity AddTask() 
+            clusNonLinCorrEnergyCut: 0.15           # Cluster non-linearity min E. Formerly "minPt" in the non-linearity AddTask()
+        defaultClusterContainer_PHOS:
+            branchName: "usedefault"
+            includePHOSonly: true
     trackContainers:                                # Configure tracks
         # The user can select the name of each container
         # The names don't need to correspond to any particular scheme
@@ -148,6 +153,14 @@ ClusterHadronicCorrection:                          # Cluster hadronic correctio
 # Determines the order of execution for the correction components. Only experts needs to be any changes here!
 # Just because it is listed here does not mean it will be executed! That is determined by the "enabled" property
 # of each correction component
+PHOSCorrections:
+    enabled: false
+    isMC: false
+    options: ""
+    cellsNames:
+        - phosCells
+    clusterContainersNames:
+        - defaultClusterContainer_PHOS
 executionOrder:
     - CellEnergy
     - CellBadChannel
@@ -158,3 +171,4 @@ executionOrder:
     - ClusterNonLinearity
     - ClusterTrackMatcher
     - ClusterHadronicCorrection
+    - PHOSCorrections

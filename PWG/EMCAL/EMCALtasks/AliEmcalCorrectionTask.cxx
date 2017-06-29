@@ -920,6 +920,13 @@ void AliEmcalCorrectionTask::SetupContainer(AliEmcalContainerUtils::InputObject_
       AliDebugStream(2) << clusterContainer->GetName() << ": Setting Include PHOS to " << (tempBool ? "enabled" : "disabled") << std::endl;
       clusterContainer->SetIncludePHOS(tempBool);
     }
+    
+    // SetIncludePHOSonly
+    result = AliEmcalCorrectionComponent::GetProperty("includePHOSonly", tempBool, userNode, defaultNode, false, containerName);
+    if (result) {
+      AliDebugStream(2) << clusterContainer->GetName() << ": Setting Include PHOSonly to " << (tempBool ? "enabled" : "disabled") << std::endl;
+      clusterContainer->SetIncludePHOSonly(tempBool);
+    }
   }
 
   // Track specific

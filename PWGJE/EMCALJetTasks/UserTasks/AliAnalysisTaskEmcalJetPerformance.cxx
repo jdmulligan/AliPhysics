@@ -1833,24 +1833,24 @@ void AliAnalysisTaskEmcalJetPerformance::ComputeBackground()
     AliTLorentzVector clus;
     Double_t clusEta;
     Double_t clusPhi;
-    Double_t clusPt;
+    Double_t clusE;
     for (auto clusIterator : clusCont->accepted_momentum() ) {
       
       clus.Clear();
       clus = clusIterator.first;
       clusEta = clus.Eta();
       clusPhi = clus.Phi_0_2pi();
-      clusPt = clus.Pt();
+      clusE = clus.E();
       
       // (1)
       if (TMath::Abs(clusEta) < etaEMCal && clusPhi > phiMinEMCal && clusPhi < phiMaxEMCal) {
-        clusESumEMCal += clusPt;
+        clusESumEMCal += clusE;
       }
       
       // (2)
       deltaR = GetDeltaR(&clus, etaEMCalRC, phiEMCalRC);
       if (deltaR < jetR) {
-        clusESumEMCalRC += clusPt;
+        clusESumEMCalRC += clusE;
       }
       
     }

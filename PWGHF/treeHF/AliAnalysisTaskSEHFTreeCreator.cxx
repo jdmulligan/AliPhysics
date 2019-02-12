@@ -162,7 +162,11 @@ fRunNumber(0),
 fFillMCGenTrees(kTRUE),
 fDsMassKKOpt(1),
 fLc2V0bachelorCalcSecoVtx(0),
-fTreeSingleTrackVarsOpt(AliHFTreeHandler::kRedSingleTrackVars)
+fTreeSingleTrackVarsOpt(AliHFTreeHandler::kRedSingleTrackVars),
+fUseAliEventCuts(kTRUE),
+fEventCuts(0),
+fEventCutList(0),
+fUseManualEventCutsLHC15o(kFALSE)
 {
 
 /// Default constructor
@@ -250,7 +254,11 @@ fRunNumber(0),
 fFillMCGenTrees(kTRUE),
 fDsMassKKOpt(1),
 fLc2V0bachelorCalcSecoVtx(0),
-fTreeSingleTrackVarsOpt(AliHFTreeHandler::kRedSingleTrackVars)
+fTreeSingleTrackVarsOpt(AliHFTreeHandler::kRedSingleTrackVars),
+fUseAliEventCuts(kTRUE),
+fEventCuts(0),
+fEventCutList(0),
+fUseManualEventCutsLHC15o(kFALSE)
 {
     /// Standard constructor
     
@@ -537,7 +545,24 @@ void AliAnalysisTaskSEHFTreeCreator::Init()
 //________________________________________________________________________
 void AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects()
 {
-    
+  
+    // Intialize AliEventCuts
+    if (fUseAliEventCuts) {
+      fEventCutList = new TList();
+      fEventCutList ->SetOwner();
+      fEventCutList ->SetName("EventCutOutput");
+      
+      if(fUseManualEventCutsLHC15o)
+      {
+        fEventCuts.SetManualMode();
+        fEventCuts.fMC = false;
+        fEventCuts.SetupLHC15o();
+        fEventCuts.fUseVariablesCorrelationCuts = true;
+      }
+      fEventCuts.AddQAplotsToList(fEventCutList);
+      PostData(1, fEventCutList);
+    }
+  
     /// Create the output container
     //
     if(fDebug > 1) printf("AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects() \n");
@@ -798,7 +823,16 @@ void AliAnalysisTaskSEHFTreeCreator::UserExec(Option_t */*option*/)
 
 {
     /// Execute analysis for current event:
-    
+  
+    // Check if event is accepted
+    if (fUseAliEventCuts) {
+      if (!fEventCuts.AcceptEvent(InputEvent()))
+      {
+        PostData(20, fEventCutList);
+        return;
+      }
+    }
+  
     AliAODEvent *aod = dynamic_cast<AliAODEvent*> (InputEvent());
     
     fNentries->Fill(0); // all events

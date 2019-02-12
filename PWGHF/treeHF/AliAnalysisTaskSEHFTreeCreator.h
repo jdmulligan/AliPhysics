@@ -30,6 +30,7 @@
 #include <TH3F.h>
 
 #include "AliAnalysisTaskSE.h"
+#include "AliEventCuts.h"
 #include "AliRDHFCutsD0toKpi.h"
 #include "AliRDHFCutsDstoKKpi.h"
 #include "AliRDHFCutsDplustoKpipi.h"
@@ -88,6 +89,8 @@ public:
     void SetPIDoptDstarTree(Int_t opt){fPIDoptDstar=opt;}
     void SetPIDoptLc2V0bachelorTree(Int_t opt){fPIDoptLc2V0bachelor=opt;}
     void SetFillMCGenTrees(Bool_t fillMCgen) {fFillMCGenTrees=fillMCgen;}
+    void SetUseAliEventCuts(Bool_t b) { fUseAliEventCuts = b; }
+    void SetUseManualEvtCutsLHC15o(Bool_t input) { fUseManualEventCutsLHC15o = input;}
   
     void SetDsMassKKOption(AliHFTreeHandlerDstoKKpi::massKKopt opt) {fDsMassKKOpt=opt;}
     void SetLc2V0bachelorCalcSecoVtx(Int_t opt=1) {fLc2V0bachelorCalcSecoVtx=opt;}
@@ -214,8 +217,14 @@ private:
   
     Int_t                   fTreeSingleTrackVarsOpt;               /// option for single-track variables to be filled in the trees
   
+    // Event selection
+    Bool_t                  fUseAliEventCuts;                      ///< Flag to use AliEventCuts (otherwise AliAnalysisTaskEmcal will be used)
+    AliEventCuts            fEventCuts;                            ///< event selection utility
+    TList                  *fEventCutList;                         //!<! Output list for event cut histograms
+    Bool_t                  fUseManualEventCutsLHC15o;             ///< Flag to use manual event cuts
+  
     /// \cond CLASSIMP
-    ClassDef(AliAnalysisTaskSEHFTreeCreator,8);
+    ClassDef(AliAnalysisTaskSEHFTreeCreator,9);
     /// \endcond
 };
 

@@ -799,12 +799,14 @@ void AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects()
       TString nameoutput = "tree_Jet";
       fTreeHandlerJet = new AliJetTreeHandler(fJetCollArray.GetEntriesFast());
       fVariablesTreeJet = (TTree*)fTreeHandlerJet->BuildTree(nameoutput,nameoutput);
+      fVariablesTreeJet->SetMaxVirtualSize(1.e+8/nEnabledTrees);
       fTreeEvChar->AddFriend(fVariablesTreeJet);
       if(fFillMCGenTrees && fReadMC) {
         OpenFile(21);
         TString nameoutput = "tree_Jet_gen";
         fTreeHandlerGenJet = new AliJetTreeHandler(fJetCollArray.GetEntriesFast());
         fGenTreeJet = (TTree*)fTreeHandlerGenJet->BuildTree(nameoutput,nameoutput);
+        fGenTreeJet->SetMaxVirtualSize(1.e+8/nEnabledTrees);
         fTreeEvChar->AddFriend(fGenTreeJet);
       }
     }
@@ -1080,7 +1082,9 @@ void AliAnalysisTaskSEHFTreeCreator::UserExec(Option_t */*option*/)
     if(fFillMCGenTrees && fReadMC) ProcessMCGen(mcArray);
   
     // Fill the jet tree
-    FillJetTree();
+    if (fWriteVariableTreeJet) {
+      FillJetTree();
+    }
   
     // Post the data
     PostData(1,fNentries);

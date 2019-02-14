@@ -47,8 +47,13 @@
 #include "AliHFTreeHandlerBplustoD0pi.h"
 #include "AliHFTreeHandlerDstartoKpipi.h"
 #include "AliHFTreeHandlerLc2V0bachelor.h"
+#include "AliJetTreeHandler.h"
+#include "AliJetContainer.h"
 
 class AliAODEvent;
+class TClonesArray;
+class AliEmcalJet;
+class AliRhoParameter;
 
 class AliAnalysisTaskSEHFTreeCreator : public AliAnalysisTaskSE
 {
@@ -66,6 +71,8 @@ public:
     virtual void Init();
     virtual void LocalInit() {Init();}
     virtual void UserExec(Option_t *option);
+    virtual void ExecOnce();
+    virtual Bool_t RetrieveEventObjects();
     virtual void Terminate(Option_t *option);
     
     
@@ -105,6 +112,16 @@ public:
   
     Bool_t CheckDaugAcc(TClonesArray* arrayMC,Int_t nProng, Int_t *labDau);
     AliAODVertex* ReconstructBplusVertex(const AliVVertex *primary, TObjArray *tracks, Double_t bField, Double_t dispersion);
+  
+    // Jets
+    //-----------------------------------------------------------------------------------------------
+    void SetFillJetTree(Int_t opt){fWriteVariableTreeJet=opt;}
+  
+    AliJetContainer* AddJetContainer(AliJetContainer::EJetType_t jetType, AliJetContainer::EJetAlgo_t jetAlgo, AliJetContainer::ERecoScheme_t recoScheme, Double_t radius, UInt_t accType, AliParticleContainer* partCont, AliClusterContainer* clusCont, TString tag = "Jet");
+    AliJetContainer* AddJetContainer(const char *n, UInt_t accType, Float_t jetRadius);
+    AliJetContainer* GetJetContainer(Int_t i=0) const;
+    void FillJetTree();
+  
     
 private:
     
@@ -214,8 +231,30 @@ private:
   
     Int_t                   fTreeSingleTrackVarsOpt;               /// option for single-track variables to be filled in the trees
   
+  
+    // Jets
+    //-----------------------------------------------------------------------------------------------
+  
+    // Tree
+    Int_t                   fWriteVariableTreeJet;                 ///< flag to decide whether to write the candidate variables on a tree variables
+                                                                   // 0 don't fill
+                                                                   // 1 fill standard tree
+    TTree                  *fVariablesTreeJet;                     //!<! tree of the candidate variables
+    TTree                  *fGenTreeJet;                           //!<! tree of the gen jet variables
+    AliJetTreeHandler      *fTreeHandlerGenJet;                    //!<! handler object for the tree with topological variables
+    AliJetTreeHandler      *fTreeHandlerJet;                       //!<! handler object for the tree with topological variables
+  
+    // Jet container and array
+    Bool_t                  fLocalInitialized;                     ///< whether or not the task has been already initialized
+    TObjArray               fJetCollArray;                         ///< array of jet containers
+  
+    // Jet background subtraction
+    TString                 fRhoName;                              ///<  rho name
+    AliRhoParameter        *fRho;                                  //!<! event rho
+    Double_t                fRhoVal;                               //!<! event rho value
+  
     /// \cond CLASSIMP
-    ClassDef(AliAnalysisTaskSEHFTreeCreator,8);
+    ClassDef(AliAnalysisTaskSEHFTreeCreator,9);
     /// \endcond
 };
 

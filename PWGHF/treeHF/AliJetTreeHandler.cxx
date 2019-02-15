@@ -25,18 +25,8 @@ AliJetTreeHandler::AliJetTreeHandler():
   TObject(),
   fTreeVar(nullptr),
   fIsMCGenTree(false),
+  fJetContainer(nullptr),
   fJetVariables(),
-  fCurrentJetCompressed()
-{
-}
-
-//________________________________________________________________
-// Constructor with specified number of jet branches
-AliJetTreeHandler::AliJetTreeHandler(int n):
-  TObject(),
-  fTreeVar(nullptr),
-  fIsMCGenTree(false),
-  fJetVariables(n),
   fCurrentJetCompressed()
 {
 }
@@ -60,13 +50,8 @@ TTree* AliJetTreeHandler::BuildTree(TString name, TString title)
   }
   fTreeVar = new TTree(name.Data(),title.Data());
   
-  // Loop over jet containers, and add a branch for each jet container
-  for(UInt_t i =0; i<fJetVariables.size(); i++) {
-    
-    // Create a branch for the current jet container
-    fTreeVar->Branch( Form("jets%d", i), "std::vector<AliJetInfoCompressed>", &fJetVariables[i]);
-    
-  }
+  // Create a branch for the current jet container
+  fTreeVar->Branch("Jets", "std::vector<AliJetInfoCompressed>", &fJetVariables);
   
   return fTreeVar;
 }
@@ -75,16 +60,16 @@ TTree* AliJetTreeHandler::BuildTree(TString name, TString title)
  * Set jet tree variables
  */
 //________________________________________________________________
-bool AliJetTreeHandler::SetJetVariables(int i, AliJetContainer* jetCont)
+bool AliJetTreeHandler::SetJetVariables()
 {
   
-  for (const auto jet : jetCont->accepted()) {
+  for (const auto jet : fJetContainer->accepted()) {
     
     // Fill AliJetInfoCompressed object from AliEmcalJet object
-    fCurrentJetCompressed.Set(jet, jetCont);
+    fCurrentJetCompressed.Set(jet, fJetContainer);
     
     // Add the AliJetInfoCompressed object to the current jet container's branch
-    fJetVariables[i].push_back(fCurrentJetCompressed);
+    fJetVariables.push_back(fCurrentJetCompressed);
     
   }
   
@@ -99,8 +84,6 @@ void AliJetTreeHandler::FillTree() {
 
   fTreeVar->Fill();
   
-  for(UInt_t i =0; i<fJetVariables.size(); i++) {
-    fJetVariables[i].clear();
-  }
+  fJetVariables.clear();
   
 }

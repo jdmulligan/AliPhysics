@@ -165,11 +165,11 @@ fFillMCGenTrees(kTRUE),
 fDsMassKKOpt(1),
 fLc2V0bachelorCalcSecoVtx(0),
 fTreeSingleTrackVarsOpt(AliHFTreeHandler::kRedSingleTrackVars),
-fWriteVariableTreeJet(0),
-fVariablesTreeJet(0x0),
-fGenTreeJet(0x0),
-fTreeHandlerGenJet(0x0),
-fTreeHandlerJet(0x0),
+fWriteNJetTrees(0),
+fVariablesTreeJet(0),
+fGenTreeJet(0),
+fTreeHandlerGenJet(0),
+fTreeHandlerJet(0),
 fLocalInitialized(kFALSE),
 fJetCollArray(),
 fRhoName(),
@@ -183,7 +183,7 @@ fRhoVal(0)
 
 }
 //________________________________________________________________________
-AliAnalysisTaskSEHFTreeCreator::AliAnalysisTaskSEHFTreeCreator(const char *name, TList *cutsList):
+AliAnalysisTaskSEHFTreeCreator::AliAnalysisTaskSEHFTreeCreator(const char *name, TList *cutsList, int fillNJetTrees):
 AliAnalysisTaskSE(name),
 fNentries(0x0),
 fHistoNormCounter(0x0),
@@ -265,11 +265,11 @@ fFillMCGenTrees(kTRUE),
 fDsMassKKOpt(1),
 fLc2V0bachelorCalcSecoVtx(0),
 fTreeSingleTrackVarsOpt(AliHFTreeHandler::kRedSingleTrackVars),
-fWriteVariableTreeJet(0),
-fVariablesTreeJet(0x0),
-fGenTreeJet(0x0),
-fTreeHandlerGenJet(0x0),
-fTreeHandlerJet(0x0),
+fWriteNJetTrees(fillNJetTrees),
+fVariablesTreeJet(0),
+fGenTreeJet(0),
+fTreeHandlerGenJet(0),
+fTreeHandlerJet(0),
 fLocalInitialized(kFALSE),
 fJetCollArray(),
 fRhoName(),
@@ -399,10 +399,15 @@ fRhoVal(0)
     DefineOutput(18,TTree::Class());
     // Output slot #19 stores the tree of the gen Lc2V0bachelor variables
     DefineOutput(19,TTree::Class());
-    // Output slot #20 stores the tree of the jet variables
-    DefineOutput(20,TTree::Class());
-    // Output slot #21 stores the tree of the gen jet variables
-    DefineOutput(21,TTree::Class());
+  
+    // Set up separate output slot for each jet tree (for simplicity, keep the jet tree in the last slots)
+    for (int i=0; i<fillNJetTrees; i++) {
+      // Output slot #20 stores the tree of the jet variables
+      DefineOutput(20+2*i,TTree::Class());
+      // Output slot #21 stores the tree of the gen jet variables
+      DefineOutput(21+2*i,TTree::Class());
+    }
+
 }
 
 //________________________________________________________________________
@@ -516,9 +521,8 @@ AliAnalysisTaskSEHFTreeCreator::~AliAnalysisTaskSEHFTreeCreator()
       delete fTreeHandlerLc2V0bachelor;
       fTreeHandlerLc2V0bachelor = 0x0;
     }
-    if(fTreeHandlerJet) {
-      delete fTreeHandlerJet;
-      fTreeHandlerJet = 0x0;
+    if(fTreeHandlerJet.empty()) {
+      fTreeHandlerJet.clear();
     }
     if(fTreeHandlerGenD0) {
       delete fTreeHandlerGenD0;
@@ -548,9 +552,8 @@ AliAnalysisTaskSEHFTreeCreator::~AliAnalysisTaskSEHFTreeCreator()
         delete fTreeHandlerGenLc2V0bachelor;
         fTreeHandlerGenLc2V0bachelor = 0x0;
     }
-    if(fTreeHandlerGenJet) {
-        delete fTreeHandlerGenJet;
-        fTreeHandlerGenJet = 0x0;
+    if(fTreeHandlerGenJet.empty()) {
+      fTreeHandlerGenJet.clear();
     }
     if(fTreeEvChar) {
         delete fTreeEvChar;
@@ -574,7 +577,7 @@ void AliAnalysisTaskSEHFTreeCreator::Init()
 //________________________________________________________________________
 void AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects()
 {
-    
+  
     /// Create the output container
     //
     if(fDebug > 1) printf("AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects() \n");
@@ -643,7 +646,7 @@ void AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects()
     if(fWriteVariableTreeBplus) nEnabledTrees++;
     if(fWriteVariableTreeDstar) nEnabledTrees++;
     if(fWriteVariableTreeLc2V0bachelor) nEnabledTrees++;
-    if(fWriteVariableTreeJet) nEnabledTrees++;
+    nEnabledTrees += fWriteNJetTrees;
     if(fReadMC && fFillMCGenTrees) {
         nEnabledTrees = (nEnabledTrees-1)*2+1;
     }
@@ -794,20 +797,26 @@ void AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects()
             fTreeEvChar->AddFriend(fGenTreeLc2V0bachelor);
         }
     }
-    if(fWriteVariableTreeJet){
-      OpenFile(20);
-      TString nameoutput = "tree_Jet";
-      fTreeHandlerJet = new AliJetTreeHandler(fJetCollArray.GetEntriesFast());
-      fVariablesTreeJet = (TTree*)fTreeHandlerJet->BuildTree(nameoutput,nameoutput);
-      fVariablesTreeJet->SetMaxVirtualSize(1.e+8/nEnabledTrees);
-      fTreeEvChar->AddFriend(fVariablesTreeJet);
+    if(fWriteNJetTrees > 0){
+      for (int i=0; i<fJetCollArray.GetEntriesFast(); i++) {
+        OpenFile(20 + 2*i);
+        TString nameoutput = GetJetContainer(i)->GetName();
+        fTreeHandlerJet.push_back(new AliJetTreeHandler());
+        fTreeHandlerJet.at(i)->SetJetContainer(GetJetContainer(i));
+        fVariablesTreeJet.push_back((TTree*)fTreeHandlerJet.at(i)->BuildTree(nameoutput,nameoutput));
+        fVariablesTreeJet.at(i)->SetMaxVirtualSize(1.e+8/nEnabledTrees);
+        fTreeEvChar->AddFriend(fVariablesTreeJet.at(i));
+      }
       if(fFillMCGenTrees && fReadMC) {
-        OpenFile(21);
-        TString nameoutput = "tree_Jet_gen";
-        fTreeHandlerGenJet = new AliJetTreeHandler(fJetCollArray.GetEntriesFast());
-        fGenTreeJet = (TTree*)fTreeHandlerGenJet->BuildTree(nameoutput,nameoutput);
-        fGenTreeJet->SetMaxVirtualSize(1.e+8/nEnabledTrees);
-        fTreeEvChar->AddFriend(fGenTreeJet);
+        for (int i=0; i<fJetCollArray.GetEntriesFast(); i++) {
+          OpenFile(21 + 2*i);
+          TString nameoutput = GetJetContainer(i)->GetName();
+          fTreeHandlerGenJet.push_back(new AliJetTreeHandler());
+          fTreeHandlerGenJet.at(i)->SetJetContainer(GetJetContainer(i));
+          fGenTreeJet.push_back((TTree*)fTreeHandlerGenJet.at(i)->BuildTree(nameoutput,nameoutput));
+          fGenTreeJet.at(i)->SetMaxVirtualSize(1.e+8/nEnabledTrees);
+          fTreeEvChar->AddFriend(fGenTreeJet.at(i));
+        }
       }
     }
 
@@ -844,9 +853,12 @@ void AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects()
       PostData(18,fVariablesTreeLc2V0bachelor);
       if(fFillMCGenTrees && fReadMC) PostData(19,fGenTreeLc2V0bachelor);
     }
-    if(fWriteVariableTreeJet){
-      PostData(20,fVariablesTreeJet);
-      if(fFillMCGenTrees && fReadMC) PostData(21,fGenTreeJet);
+    if(fWriteNJetTrees > 0){
+      // Post each jet tree to a separate output slot (for simplicity, keep the jet tree in the last slots)
+      for (int i=0; i<fJetCollArray.GetEntriesFast(); i++) {
+        PostData(20+2*i,fVariablesTreeJet.at(i));
+        if(fFillMCGenTrees && fReadMC) PostData(21+2*i,fGenTreeJet.at(i));
+      }
     }
     return;
 }
@@ -864,15 +876,11 @@ void AliAnalysisTaskSEHFTreeCreator::FillJetTree() {
     return;
   }
 
-  // Loop through jet containers, and fill jet variables for each
+  // Loop through jet containers, set jet variables for each, and fill each tree
   for(Int_t i =0; i<fJetCollArray.GetEntriesFast(); i++) {
     AliJetContainer *jetCont = static_cast<AliJetContainer*>(fJetCollArray.At(i));
-    fTreeHandlerJet->SetJetVariables(i, jetCont);
-  }
-  
-  // Fill jet tree
-  if (fWriteVariableTreeJet) {
-    fTreeHandlerJet->FillTree();
+    fTreeHandlerJet.at(i)->SetJetVariables();
+    fTreeHandlerJet.at(i)->FillTree();
   }
 
 }
@@ -1082,7 +1090,7 @@ void AliAnalysisTaskSEHFTreeCreator::UserExec(Option_t */*option*/)
     if(fFillMCGenTrees && fReadMC) ProcessMCGen(mcArray);
   
     // Fill the jet tree
-    if (fWriteVariableTreeJet) {
+    if (fWriteNJetTrees > 0) {
       FillJetTree();
     }
   
@@ -1119,9 +1127,12 @@ void AliAnalysisTaskSEHFTreeCreator::UserExec(Option_t */*option*/)
         PostData(18,fVariablesTreeLc2V0bachelor);
         if(fFillMCGenTrees && fReadMC) PostData(19,fGenTreeLc2V0bachelor);
     }
-    if(fWriteVariableTreeJet){
-      PostData(20,fVariablesTreeJet);
-      if(fFillMCGenTrees && fReadMC) PostData(21,fGenTreeJet);
+    if(fWriteNJetTrees > 0){
+      // Post each jet tree to a separate output slot (for simplicity, keep the jet tree in the last slots)
+      for (int i=0; i<fJetCollArray.GetEntriesFast(); i++) {
+        PostData(20+2*i,fVariablesTreeJet.at(i));
+        if(fFillMCGenTrees && fReadMC) PostData(21+2*i,fGenTreeJet.at(i));
+      }
     }
 
     return;

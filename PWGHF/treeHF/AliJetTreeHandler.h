@@ -28,14 +28,17 @@ class AliJetTreeHandler : public TObject
   public:
 
     AliJetTreeHandler();
-    AliJetTreeHandler(int nJetContainers);
     virtual ~AliJetTreeHandler();
 
-    //core methods
+    // Core methods
     TTree* BuildTree(TString name, TString title);
-    bool SetJetVariables(int i, AliJetContainer* jetCont);
+    bool SetJetVariables();
     void FillTree(); //to be called for each event
   
+    // Setters
+    void SetJetContainer(AliJetContainer* jetCont) { fJetContainer = jetCont; }
+  
+    // Utility functions
     Double_t GetJetPt(const AliEmcalJet* jet, AliJetContainer* jetCont);
 
   protected:
@@ -43,11 +46,12 @@ class AliJetTreeHandler : public TObject
     TTree*                                              fTreeVar;                 ///< Tree with compressed jet objects
     bool                                                fIsMCGenTree;             ///< flag to know if is a tree for MC generated particles
   
-    std::vector< std::vector<AliJetInfoCompressed> >    fJetVariables;            //!<! 2-d vector of (jet container, compressed jet info) in the event
+    AliJetContainer*                                    fJetContainer;            //!<! Jet container for this tree
+    std::vector<AliJetInfoCompressed>                   fJetVariables;            //!<! vector of compressed jet info in the event
     AliJetInfoCompressed                                fCurrentJetCompressed;    //!<! Info of current jet (compressed)
   
   /// \cond CLASSIMP
-  ClassDef(AliJetTreeHandler,1); ///
+  ClassDef(AliJetTreeHandler,2); ///
   /// \endcond
 };
 

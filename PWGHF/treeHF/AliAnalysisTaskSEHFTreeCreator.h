@@ -62,7 +62,7 @@ public:
 
     
     AliAnalysisTaskSEHFTreeCreator();
-    AliAnalysisTaskSEHFTreeCreator(const char *name,TList *cutsList);
+    AliAnalysisTaskSEHFTreeCreator(const char *name,TList *cutsList, int fillNJetTrees);
     virtual ~AliAnalysisTaskSEHFTreeCreator();
     
     
@@ -115,7 +115,7 @@ public:
   
     // Jets
     //-----------------------------------------------------------------------------------------------
-    void SetFillJetTree(Int_t opt){fWriteVariableTreeJet=opt;}
+    void SetFillNJetTrees(Int_t n){fWriteNJetTrees=n;}
   
     AliJetContainer* AddJetContainer(AliJetContainer::EJetType_t jetType, AliJetContainer::EJetAlgo_t jetAlgo, AliJetContainer::ERecoScheme_t recoScheme, Double_t radius, UInt_t accType, AliParticleContainer* partCont, AliClusterContainer* clusCont, TString tag = "Jet");
     AliJetContainer* AddJetContainer(const char *n, UInt_t accType, Float_t jetRadius);
@@ -236,13 +236,12 @@ private:
     //-----------------------------------------------------------------------------------------------
   
     // Tree
-    Int_t                   fWriteVariableTreeJet;                 ///< flag to decide whether to write the candidate variables on a tree variables
-                                                                   // 0 don't fill
-                                                                   // 1 fill standard tree
-    TTree                  *fVariablesTreeJet;                     //!<! tree of the candidate variables
-    TTree                  *fGenTreeJet;                           //!<! tree of the gen jet variables
-    AliJetTreeHandler      *fTreeHandlerGenJet;                    //!<! handler object for the tree with topological variables
-    AliJetTreeHandler      *fTreeHandlerJet;                       //!<! handler object for the tree with topological variables
+    Int_t                   fWriteNJetTrees;                       ///< number of jet trees to write
+                                                                   // (should match number of jet containers added)
+    std::vector<TTree*>     fVariablesTreeJet;                     //!<! vector of trees of the candidate variables
+    std::vector<TTree*>     fGenTreeJet;                           //!<! vector of trees of the gen jet variables
+    std::vector<AliJetTreeHandler*> fTreeHandlerGenJet;            //!<! handler object for the tree with topological variables
+    std::vector<AliJetTreeHandler*> fTreeHandlerJet;               //!<! handler object for the tree with topological variables
   
     // Jet container and array
     Bool_t                  fLocalInitialized;                     ///< whether or not the task has been already initialized
@@ -254,7 +253,7 @@ private:
     Double_t                fRhoVal;                               //!<! event rho value
   
     /// \cond CLASSIMP
-    ClassDef(AliAnalysisTaskSEHFTreeCreator,9);
+    ClassDef(AliAnalysisTaskSEHFTreeCreator,10);
     /// \endcond
 };
 

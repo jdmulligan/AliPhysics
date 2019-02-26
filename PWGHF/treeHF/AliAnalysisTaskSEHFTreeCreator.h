@@ -96,6 +96,8 @@ public:
     void SetPIDoptLc2V0bachelorTree(Int_t opt){fPIDoptLc2V0bachelor=opt;}
     void SetFillMCGenTrees(Bool_t fillMCgen) {fFillMCGenTrees=fillMCgen;}
   
+    void SetFillJetMatching(bool b) { fFillMatchedJetID = b; }
+  
     void SetDsMassKKOption(AliHFTreeHandlerDstoKKpi::massKKopt opt) {fDsMassKKOpt=opt;}
     void SetLc2V0bachelorCalcSecoVtx(Int_t opt=1) {fLc2V0bachelorCalcSecoVtx=opt;}
   
@@ -239,9 +241,7 @@ private:
     Int_t                   fWriteNJetTrees;                       ///< number of jet trees to write
                                                                    // (should match number of jet containers added)
     std::vector<TTree*>     fVariablesTreeJet;                     //!<! vector of trees of the candidate variables
-    std::vector<TTree*>     fGenTreeJet;                           //!<! vector of trees of the gen jet variables
-    std::vector<AliJetTreeHandler*> fTreeHandlerGenJet;            //!<! handler object for the tree with topological variables
-    std::vector<AliJetTreeHandler*> fTreeHandlerJet;               //!<! handler object for the tree with topological variables
+    std::vector<AliJetTreeHandler*> fTreeHandlerJet;               //!<! vector of handler objects for jet tree
   
     // Jet container and array
     Bool_t                  fLocalInitialized;                     ///< whether or not the task has been already initialized
@@ -251,6 +251,9 @@ private:
     TString                 fRhoName;                              ///<  rho name
     AliRhoParameter        *fRho;                                  //!<! event rho
     Double_t                fRhoVal;                               //!<! event rho value
+  
+    // Flags specifying what info to fill in jet trees
+    bool                    fFillMatchedJetID;                    ///< flag to know if matched jet ID should be filled
   
     /// \cond CLASSIMP
     ClassDef(AliAnalysisTaskSEHFTreeCreator,10);

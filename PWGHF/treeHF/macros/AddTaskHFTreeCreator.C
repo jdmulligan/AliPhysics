@@ -20,7 +20,7 @@ AliAnalysisTaskSEHFTreeCreator *AddTaskHFTreeCreator(Bool_t readMC=kTRUE,
                                                      Int_t pidOptLc2V0bachelor=AliHFTreeHandler::kRawAndNsigmaPID,
                                                      Int_t pidOptBplus=AliHFTreeHandler::kRawAndNsigmaPID,
                                                      Int_t singletrackvarsopt=AliHFTreeHandler::kRedSingleTrackVars,
-                                                     Int_t fillNJetTrees = 2)
+                                                     Int_t fillNJetTrees = 0)
 {
     //
     //
@@ -144,7 +144,6 @@ AliAnalysisTaskSEHFTreeCreator *AddTaskHFTreeCreator(Bool_t readMC=kTRUE,
     TString treeGenDstarname = "coutputTreeGenDstar";
     TString treeGenLc2V0bachelorname = "coutputTreeGenLc2V0bachelor";
     TString treeJetName = "coutputTreeJet%d";
-    TString treeGenJetName = "coutputTreeGenJet%d";
  
     inname += finDirname.Data();
     histoname += finDirname.Data();
@@ -167,7 +166,6 @@ AliAnalysisTaskSEHFTreeCreator *AddTaskHFTreeCreator(Bool_t readMC=kTRUE,
     treeGenDstarname += finDirname.Data();
     treeGenLc2V0bachelorname += finDirname.Data();
     treeJetName += finDirname.Data();
-    treeGenJetName += finDirname.Data();
 
     AliAnalysisDataContainer *cinput = mgr->CreateContainer(inname,TChain::Class(),AliAnalysisManager::kInputContainer);
     TString outputfile = AliAnalysisManager::GetCommonFileName();
@@ -195,7 +193,6 @@ AliAnalysisTaskSEHFTreeCreator *AddTaskHFTreeCreator(Bool_t readMC=kTRUE,
     AliAnalysisDataContainer *coutputTreeLc2V0bachelor = 0x0;
     AliAnalysisDataContainer *coutputTreeGenLc2V0bachelor = 0x0;
     std::vector<AliAnalysisDataContainer*> coutputTreeJet;
-    std::vector<AliAnalysisDataContainer*> coutputTreeGenJet;
 
     if(fillTreeD0) {
       coutputTreeD0 = mgr->CreateContainer(treeD0name,TTree::Class(),AliAnalysisManager::kOutputContainer,outputfile.Data());
@@ -263,10 +260,6 @@ AliAnalysisTaskSEHFTreeCreator *AddTaskHFTreeCreator(Bool_t readMC=kTRUE,
     for (int i=0; i<fillNJetTrees; i++) {
       coutputTreeJet.push_back(mgr->CreateContainer(Form(treeJetName, i),TTree::Class(),AliAnalysisManager::kOutputContainer,outputfile.Data()));
       coutputTreeJet.at(i)->SetSpecialOutput();
-      if(readMC && fillMGgenTrees) {
-        coutputTreeGenJet.push_back(mgr->CreateContainer(Form(treeGenJetName, i),TTree::Class(),AliAnalysisManager::kOutputContainer,outputfile.Data()));
-        coutputTreeGenJet.at(i)->SetSpecialOutput();
-      }
     }
 
     mgr->ConnectInput(task,0,mgr->GetCommonInputContainer());
@@ -304,8 +297,7 @@ AliAnalysisTaskSEHFTreeCreator *AddTaskHFTreeCreator(Bool_t readMC=kTRUE,
         if(readMC && fillMGgenTrees) mgr->ConnectOutput(task,19,coutputTreeGenLc2V0bachelor);
     }
     for (int i=0; i<fillNJetTrees; i++) {
-      mgr->ConnectOutput(task,20+2*i,coutputTreeJet.at(i));
-      if(readMC && fillMGgenTrees) mgr->ConnectOutput(task,21+2*i,coutputTreeGenJet.at(i));
+      mgr->ConnectOutput(task,20+i,coutputTreeJet.at(i));
     }
 
     return task;

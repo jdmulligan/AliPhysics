@@ -56,16 +56,20 @@ class AliJetTreeHandler : public TObject
   
     // Setters
     void SetJetContainer(AliJetContainer* jetCont) { fJetContainer = jetCont; }
+    void SetFillMatchingJetID(bool b) { fFillMatchingJetID = b; }
   
     // Utility functions
+    void SetJetLabels();
     Double_t GetJetPt(const AliEmcalJet* jet);
 
   protected:
   
     TTree*                       fTreeVar;                 ///< Tree with compressed jet objects
-    bool                         fIsMCGenTree;             ///< flag to know if is a tree for MC generated particles
   
     AliJetContainer*             fJetContainer;            //!<! Jet container for this tree
+  
+    // Flags specifying what info to fill to the tree
+    bool                         fFillMatchingJetID;       ///< flag to know if matched jet ID should be filled
 
     // Jet parameters to be stored in the tree.
     // Each branch in the tree consists of a vector of a given variable,
@@ -76,6 +80,9 @@ class AliJetTreeHandler : public TObject
     std::vector<float>           fPhi;                     //!<! Phi of the jet (0 < phi < 2pi)
     std::vector<float>           fArea;                    //!<! Area of the jet
     std::vector<float>           fN;                       //!<! Number of jet constituents
+  
+    // Jet matching
+    std::vector<float>           fMatchedJetID;            //!<! Index of matched jet in the matching container's std::vectors
   
   /// \cond CLASSIMP
   ClassDef(AliJetTreeHandler,3); ///

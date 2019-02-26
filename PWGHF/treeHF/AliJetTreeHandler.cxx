@@ -45,14 +45,15 @@ ClassImp(AliJetTreeHandler);
 AliJetTreeHandler::AliJetTreeHandler():
   TObject(),
   fTreeVar(nullptr),
-  fIsMCGenTree(false),
   fJetContainer(nullptr),
+  fFillMatchingJetID(false),
   fPtUncorr(),
   fPtCorr(),
   fEta(),
   fPhi(),
   fArea(),
-  fN()
+  fN(),
+  fMatchedJetID()
 {
 }
 
@@ -84,6 +85,10 @@ TTree* AliJetTreeHandler::BuildTree(TString name, TString title)
   fTreeVar->Branch("Area",&fArea);
   fTreeVar->Branch("N",&fN);
   
+  if (fFillMatchingJetID) {
+    fTreeVar->Branch("MatchedJetID", &fMatchedJetID);
+  }
+  
   return fTreeVar;
 }
 
@@ -93,7 +98,7 @@ TTree* AliJetTreeHandler::BuildTree(TString name, TString title)
 //________________________________________________________________
 bool AliJetTreeHandler::SetJetVariables()
 {
-  
+
   for (const auto jet : fJetContainer->accepted()) {
     
     fPtUncorr.push_back(jet->Pt());
@@ -102,6 +107,18 @@ bool AliJetTreeHandler::SetJetVariables()
     fPhi.push_back(jet->Phi_0_2pi());
     fN.push_back(jet->GetNumberOfConstituents());
     fArea.push_back(jet->Area());
+    
+    // Get matched jet (assumes the matches have been filled by a previous task)
+    if (fFillMatchingJetID) {
+      
+      int matchedJetLabel = -1;
+      const AliEmcalJet* matchedJet = jet->ClosestJet();
+      if (matchedJet) {
+        matchedJetLabel = matchedJet->GetLabel();
+      }
+      fMatchedJetID.push_back(matchedJetLabel);
+      
+    }
 
   }
   
@@ -124,6 +141,25 @@ void AliJetTreeHandler::FillTree() {
   fN.clear();
   fArea.clear();
   
+  if (fFillMatchingJetID) {
+    fMatchedJetID.clear();
+  }
+  
+}
+
+/**
+ *  If filling jet matching info (for MC), loop through jets and set fLabel,
+ *  which specifies the index of the jet in the tree variable std::vectors.
+
+ */
+//________________________________________________________________
+void AliJetTreeHandler::SetJetLabels()
+{
+  int i = 0;
+  for (auto jet : fJetContainer->accepted()) {
+    jet->SetLabel(i);
+    i++;
+  }
 }
 
 /**

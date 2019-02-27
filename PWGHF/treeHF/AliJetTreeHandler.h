@@ -56,36 +56,62 @@ class AliJetTreeHandler : public TObject
   
     // Setters
     void SetJetContainer(AliJetContainer* jetCont) { fJetContainer = jetCont; }
+    void SetFillPtUncorr(bool b) { fFillPtUncorr = b; }
+    void SetFillArea(bool b) { fFillArea = b; }
+    void SetFillNConstituents(bool b) { fFillNConstituents = b; }
+    void SetFillZLeading(bool b) { fFillZLeading = b; }
+    void SetFillRadialMoment(bool b) { fFillRadialMoment = b; }
+    void SetFillpTD(bool b) { fFillpTD = b; }
+    void SetFillMass(bool b) { fFillMass = b; }
     void SetFillMatchingJetID(bool b) { fFillMatchingJetID = b; }
   
     // Utility functions
     void SetJetLabels();
     Double_t GetJetPt(const AliEmcalJet* jet);
+    Double_t PTD(const AliEmcalJet *jet);
+    Double_t RadialMoment(const AliEmcalJet* jet);
+    Double_t DeltaR(const AliEmcalJet* jet, const AliVParticle* part);
 
   protected:
   
     TTree*                       fTreeVar;                 ///< Tree with compressed jet objects
-  
     AliJetContainer*             fJetContainer;            //!<! Jet container for this tree
   
     // Flags specifying what info to fill to the tree
-    bool                         fFillMatchingJetID;       ///< flag to know if matched jet ID should be filled
+    bool                         fFillPtUncorr;            ///< Pt of the jet (GeV/c) (not background subtracted)
+    bool                         fFillArea;                ///< Area
+    bool                         fFillNConstituents;       ///< N constituents
+    bool                         fFillZLeading;            ///< ZLeading
+    bool                         fFillRadialMoment;        ///< Radial moment
+    bool                         fFillpTD;                 ///< pT,D
+    bool                         fFillMass;                ///< Mass
+    bool                         fFillMatchingJetID;       ///< jet matching
 
     // Jet parameters to be stored in the tree.
     // Each branch in the tree consists of a vector of a given variable,
     // where the i^th entry in the vector corresponds to the i^th jet.
-    std::vector<float>           fPtUncorr;                //!<! Pt of the jet (GeV/c) (not background subtracted)
+  
+    // Basic jet quantities (always filled)
     std::vector<float>           fPtCorr;                  //!<! Pt of the jet after subtracting average background
     std::vector<float>           fEta;                     //!<! Eta of the jet
     std::vector<float>           fPhi;                     //!<! Phi of the jet (0 < phi < 2pi)
+
+    // Other jet quantities
+    std::vector<float>           fPtUncorr;                //!<! Pt of the jet (GeV/c) (not background subtracted)
     std::vector<float>           fArea;                    //!<! Area of the jet
-    std::vector<float>           fN;                       //!<! Number of jet constituents
   
+    // Jet substructure observables
+    std::vector<float>           fN;                       //!<! Number of jet constituents
+    std::vector<float>           fZLeading;                //!<! z of leading track
+    std::vector<float>           fRadialMoment;            //!<! Radial moment (not background subtracted)
+    std::vector<float>           fpTD;                     //!<! Momentum dispersion (not background subtracted)
+    std::vector<float>           fMass;                    //!<! Jet mass (not background subtracted)
+
     // Jet matching
     std::vector<float>           fMatchedJetID;            //!<! Index of matched jet in the matching container's std::vectors
   
   /// \cond CLASSIMP
-  ClassDef(AliJetTreeHandler,3); ///
+  ClassDef(AliJetTreeHandler,4); ///
   /// \endcond
 };
 

@@ -96,7 +96,14 @@ public:
     void SetPIDoptLc2V0bachelorTree(Int_t opt){fPIDoptLc2V0bachelor=opt;}
     void SetFillMCGenTrees(Bool_t fillMCgen) {fFillMCGenTrees=fillMCgen;}
   
-    void SetFillJetMatching(bool b) { fFillMatchedJetID = b; }
+    void SetFillPtUncorr(bool b) { fFillPtUncorr = b; }
+    void SetFillArea(bool b) { fFillArea = b; }
+    void SetFillNConstituents(bool b) { fFillNConstituents = b; }
+    void SetFillZLeading(bool b) { fFillZLeading = b; }
+    void SetFillRadialMoment(bool b) { fFillRadialMoment = b; }
+    void SetFillpTD(bool b) { fFillpTD = b; }
+    void SetFillMass(bool b) { fFillMass = b; }
+    void SetFillMatchingJetID(bool b) { fFillMatchingJetID = b; }
   
     void SetDsMassKKOption(AliHFTreeHandlerDstoKKpi::massKKopt opt) {fDsMassKKOpt=opt;}
     void SetLc2V0bachelorCalcSecoVtx(Int_t opt=1) {fLc2V0bachelorCalcSecoVtx=opt;}
@@ -252,11 +259,18 @@ private:
     AliRhoParameter        *fRho;                                  //!<! event rho
     Double_t                fRhoVal;                               //!<! event rho value
   
-    // Flags specifying what info to fill in jet trees
-    bool                    fFillMatchedJetID;                    ///< flag to know if matched jet ID should be filled
+    // Flags specifying what info to fill to the tree
+    bool                    fFillPtUncorr;                         ///< Pt of the jet (GeV/c) (not background subtracted)
+    bool                    fFillArea;                             ///< Area
+    bool                    fFillNConstituents;                    ///< N constituents
+    bool                    fFillZLeading;                         ///< ZLeading
+    bool                    fFillRadialMoment;                     ///< Radial moment
+    bool                    fFillpTD;                              ///< pT,D
+    bool                    fFillMass;                             ///< Mass
+    bool                    fFillMatchingJetID;                    ///< jet matching
   
     /// \cond CLASSIMP
-    ClassDef(AliAnalysisTaskSEHFTreeCreator,10);
+    ClassDef(AliAnalysisTaskSEHFTreeCreator,11);
     /// \endcond
 };
 

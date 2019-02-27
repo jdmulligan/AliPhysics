@@ -33,6 +33,8 @@
  * \date Feb 15 2019
  */
 
+#include <TVector2.h>
+
 #include "AliJetTreeHandler.h"
 
 //________________________________________________________________
@@ -46,13 +48,24 @@ AliJetTreeHandler::AliJetTreeHandler():
   TObject(),
   fTreeVar(nullptr),
   fJetContainer(nullptr),
+  fFillPtUncorr(false),
+  fFillArea(true),
+  fFillNConstituents(true),
+  fFillZLeading(true),
+  fFillRadialMoment(true),
+  fFillpTD(true),
+  fFillMass(true),
   fFillMatchingJetID(false),
-  fPtUncorr(),
   fPtCorr(),
   fEta(),
   fPhi(),
+  fPtUncorr(),
   fArea(),
   fN(),
+  fZLeading(),
+  fRadialMoment(),
+  fpTD(),
+  fMass(),
   fMatchedJetID()
 {
 }
@@ -78,12 +91,37 @@ TTree* AliJetTreeHandler::BuildTree(TString name, TString title)
   fTreeVar = new TTree(name.Data(),title.Data());
   
   // Create branches for each jet variable
-  fTreeVar->Branch("PtUncorr",&fPtUncorr);
   fTreeVar->Branch("PtCorr",&fPtCorr);
   fTreeVar->Branch("Eta",&fEta);
   fTreeVar->Branch("Phi",&fPhi);
-  fTreeVar->Branch("Area",&fArea);
-  fTreeVar->Branch("N",&fN);
+  
+  if (fFillPtUncorr) {
+    fTreeVar->Branch("PtUncorr",&fPtUncorr);
+  }
+  
+  if (fFillArea) {
+    fTreeVar->Branch("Area",&fArea);
+  }
+  
+  if (fFillNConstituents) {
+    fTreeVar->Branch("N",&fN);
+  }
+  
+  if (fFillZLeading) {
+    fTreeVar->Branch("ZLeading", &fZLeading);
+  }
+  
+  if (fFillRadialMoment) {
+    fTreeVar->Branch("RadialMoment", &fRadialMoment);
+  }
+  
+  if (fFillpTD) {
+    fTreeVar->Branch("pTD", &fpTD);
+  }
+  
+  if (fFillMass) {
+    fTreeVar->Branch("Mass", &fMass);
+  }
   
   if (fFillMatchingJetID) {
     fTreeVar->Branch("MatchedJetID", &fMatchedJetID);
@@ -101,12 +139,37 @@ bool AliJetTreeHandler::SetJetVariables()
 
   for (const auto jet : fJetContainer->accepted()) {
     
-    fPtUncorr.push_back(jet->Pt());
     fPtCorr.push_back(GetJetPt(jet));
     fEta.push_back(jet->Eta());
     fPhi.push_back(jet->Phi_0_2pi());
-    fN.push_back(jet->GetNumberOfConstituents());
-    fArea.push_back(jet->Area());
+    
+    if (fFillPtUncorr) {
+      fPtUncorr.push_back(jet->Pt());
+    }
+    
+    if (fFillArea) {
+      fArea.push_back(jet->Area());
+    }
+    
+    if (fFillNConstituents) {
+      fN.push_back(jet->GetNumberOfConstituents());
+    }
+    
+    if (fFillZLeading) {
+      fZLeading.push_back(fJetContainer->GetZLeadingCharged(jet));
+    }
+    
+    if (fFillRadialMoment) {
+      fRadialMoment.push_back(RadialMoment(jet));
+    }
+    
+    if (fFillpTD) {
+      fpTD.push_back(PTD(jet));
+    }
+    
+    if (fFillMass) {
+      fMass.push_back(jet->M());
+    }
     
     // Get matched jet (assumes the matches have been filled by a previous task)
     if (fFillMatchingJetID) {
@@ -134,12 +197,37 @@ void AliJetTreeHandler::FillTree() {
   fTreeVar->Fill();
   
   // Reset all vectors
-  fPtUncorr.clear();
   fPtCorr.clear();
   fEta.clear();
   fPhi.clear();
-  fN.clear();
-  fArea.clear();
+  
+  if (fFillPtUncorr) {
+    fPtUncorr.clear();
+  }
+  
+  if (fFillArea) {
+    fArea.clear();
+  }
+  
+  if (fFillNConstituents) {
+    fN.clear();
+  }
+  
+  if (fFillZLeading) {
+    fZLeading.clear();
+  }
+  
+  if (fFillRadialMoment) {
+    fRadialMoment.clear();
+  }
+  
+  if (fFillpTD) {
+    fpTD.clear();
+  }
+  
+  if (fFillMass) {
+    fMass.clear();
+  }
   
   if (fFillMatchingJetID) {
     fMatchedJetID.clear();
@@ -175,4 +263,67 @@ Double_t AliJetTreeHandler::GetJetPt(const AliEmcalJet* jet)
   
   Float_t pTCorr = jet->Pt() - rhoVal * jet->Area();
   return pTCorr;
+}
+
+//________________________________________________________________
+Double_t AliJetTreeHandler::PTD(const AliEmcalJet *jet){
+  
+  Double_t numeratorSquared=0;
+  Double_t denominator=0;
+  
+  for (Int_t i=0; i< jet->GetNumberOfTracks(); i++){
+    
+    AliVParticle *particle = static_cast<AliVParticle*>(jet->Track(i));
+    if (!particle) continue;
+    
+    numeratorSquared += particle->Pt() * particle->Pt();
+    denominator += particle->Pt();
+    
+  }
+  Double_t numerator = TMath::Sqrt(numeratorSquared);
+  
+  if(TMath::Abs(denominator) > 1e-3) {
+    return numerator/denominator;
+  }
+  else {
+    return -1;
+  }
+}
+
+//________________________________________________________________
+Double_t AliJetTreeHandler::RadialMoment(const AliEmcalJet* jet){
+  
+  Double_t numerator = 0;
+  Double_t denominator=0;
+  
+  for (Int_t i=0; i< jet->GetNumberOfTracks(); i++){
+    
+    const AliVParticle* particle = static_cast<AliVParticle*>(jet->Track(i));
+    if(!particle) continue;
+    
+    numerator += particle->Pt() * DeltaR(jet, particle);
+    denominator += particle->Pt();
+    
+  }
+  
+  if(TMath::Abs(denominator) > 1e-3) {
+    return numerator/denominator;
+  }
+  else {
+    return -1;
+  }
+  
+}
+
+//________________________________________________________________
+Double_t AliJetTreeHandler::DeltaR(const AliEmcalJet* jet, const AliVParticle* part) {
+  
+  Double_t jetEta = jet->Eta();
+  Double_t jetPhi = jet->Phi_0_2pi();
+
+  Double_t partEta = part->Eta();
+  Double_t partPhi = TVector2::Phi_0_2pi(part->Phi());
+  
+  return TMath::Sqrt( (jetEta-partEta)*(jetEta-partEta) + (jetPhi-partPhi)*(jetPhi-partPhi) );
+  
 }

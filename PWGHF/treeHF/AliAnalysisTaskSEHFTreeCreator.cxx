@@ -173,7 +173,14 @@ fJetCollArray(),
 fRhoName(),
 fRho(0),
 fRhoVal(0),
-fFillMatchedJetID(false)
+fFillPtUncorr(false),
+fFillArea(true),
+fFillNConstituents(true),
+fFillZLeading(true),
+fFillRadialMoment(true),
+fFillpTD(true),
+fFillMass(true),
+fFillMatchingJetID(false)
 {
 
 /// Default constructor
@@ -272,7 +279,14 @@ fJetCollArray(),
 fRhoName(),
 fRho(0),
 fRhoVal(0),
-fFillMatchedJetID(false)
+fFillPtUncorr(false),
+fFillArea(true),
+fFillNConstituents(true),
+fFillZLeading(true),
+fFillRadialMoment(true),
+fFillpTD(true),
+fFillMass(true),
+fFillMatchingJetID(false)
 {
     /// Standard constructor
   
@@ -798,9 +812,15 @@ void AliAnalysisTaskSEHFTreeCreator::UserCreateOutputObjects()
         // Create jet tree handlers and configure them
         fTreeHandlerJet.push_back(new AliJetTreeHandler());
         fTreeHandlerJet.at(i)->SetJetContainer(GetJetContainer(i));
-        if (fFillMatchedJetID) {
-          fTreeHandlerJet.at(i)->SetFillMatchingJetID(true);
-        }
+        
+        fTreeHandlerJet.at(i)->SetFillPtUncorr(fFillPtUncorr);
+        fTreeHandlerJet.at(i)->SetFillArea(fFillArea);
+        fTreeHandlerJet.at(i)->SetFillNConstituents(fFillNConstituents);
+        fTreeHandlerJet.at(i)->SetFillZLeading(fFillZLeading);
+        fTreeHandlerJet.at(i)->SetFillRadialMoment(fFillRadialMoment);
+        fTreeHandlerJet.at(i)->SetFillpTD(fFillpTD);
+        fTreeHandlerJet.at(i)->SetFillMass(fFillMass);
+        fTreeHandlerJet.at(i)->SetFillMatchingJetID(fFillMatchingJetID);
         
         // Build jet trees
         TString nameoutput = GetJetContainer(i)->GetName();
@@ -867,7 +887,7 @@ void AliAnalysisTaskSEHFTreeCreator::FillJetTree() {
   
   // If filling jet matching info (for MC), loop through jet containers and set fLabel,
   // which specifies the index of the jet in the tree variable std::vectors.
-  if (fFillMatchedJetID) {
+  if (fFillMatchingJetID) {
     for(Int_t i =0; i<fJetCollArray.GetEntriesFast(); i++) {
       fTreeHandlerJet.at(i)->SetJetLabels();
     }
